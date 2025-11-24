@@ -1,0 +1,9 @@
+.vs
+Seminario.Api/bin/*
+Seminario.Api/obj/*
+Seminario.Business/bin/*
+Seminario.Business/obj/*
+Seminario.Core/bin/*
+Seminario.Core/obj/*
+Seminario.Data/bin/*
+Seminario.Data/obj/*
