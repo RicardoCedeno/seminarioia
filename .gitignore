@@ -7,3 +7,5 @@ Seminario.Core/bin/*
 Seminario.Core/obj/*
 Seminario.Data/bin/*
 Seminario.Data/obj/*
+Seminario.Web/.vscode/*
+Seminario.Web/node_modules/*
