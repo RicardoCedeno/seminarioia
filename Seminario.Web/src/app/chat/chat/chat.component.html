@@ -1,1 +1,14 @@
-<p>chat works!</p>
+<div class="container">
+  <div class="chat-historial-style">
+    <div *ngFor="let msg of mensajes" class="mensaje">
+      {{ msg }}
+    </div>
+  </div>
+
+  <div class="user-style">
+    <span>Escribe tu mensaje</span>
+    <textarea [(ngModel)]="nuevoMensaje" cols="100" rows="3"></textarea>
+  </div>
+
+  <button (click)="enviarMensaje()">Enviar</button>
+</div>
