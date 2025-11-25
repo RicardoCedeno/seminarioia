@@ -10,7 +10,7 @@ namespace Seminario.Core
   {
     public bool FromUser { get; set; } = false;
     public string CampoId { get; set; } = string.Empty;
-    public string SentMessage { get; set; } = string.Empty;
+    public List<string> SentMessage { get; set; } = [];
     public string MessageCategory {  get; set; } = string.Empty;
     public DateTime SentMessageDatetime { get; set; } = new();
   }

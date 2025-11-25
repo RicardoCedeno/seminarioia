@@ -9,7 +9,6 @@ namespace Seminario.Business.Contracts.Repositories
 {
   public interface IMessageRepository
   {
-    Task<Message> SentMessageFromUser(string campoId, DateTime date);
-    Task<List<Message>> SentMessageFromSigco(string messageCategory);
+    Task<ClasificacionDeterminadaDto> ClasificarMensaje(string message);
   }
 }

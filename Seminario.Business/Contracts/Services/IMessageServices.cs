@@ -9,7 +9,6 @@ namespace Seminario.Business.Contracts.Services
 {
   public interface IMessageServices
   {
-    Task<Message> SentMessageFromUser(string campoId, DateTime date);
-    Task<List<Message>> SentMessageFromSigco(string messageCategory);
+    Task<Message> SendMessage(Message message);
   }
 }
