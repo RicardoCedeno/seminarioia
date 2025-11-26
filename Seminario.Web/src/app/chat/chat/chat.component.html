@@ -1,7 +1,7 @@
 <div class="container">
-  <div class="chat-historial-style">
-    <div *ngFor="let msg of mensajes" class="mensaje">
-      {{ msg }}
+  <div class="chat-historial-style" #chatContainer>
+    <div *ngFor="let msg of mensajes" [ngClass]="{ 'user-msg': msg.fromUser, 'bot-msg': !msg.fromUser }">
+      {{ msg.texto }}
     </div>
   </div>
 

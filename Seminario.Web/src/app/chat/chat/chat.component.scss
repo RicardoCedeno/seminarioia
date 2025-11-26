@@ -1,10 +1,15 @@
+$blue: #000dff;
+$orange: #ff8c20;
+
+$user-color: #82c1ff;;
+$orange-color: #fbfbfb;
 .container{
-    border: blue 1px solid;
+    border: $blue 1px solid;
 
 }
 
 .chat-historial-style{
-    border: orange 1px solid;
+    border: $orange 1px solid;
     padding: 10px 5px 10px 5px;
     margin: 10px 0px 10px 0px;
     height: 500px;
@@ -21,3 +26,31 @@
   padding: 5px;
   border-radius: 5px;
 }
+
+.user-msg {
+  text-align: right;
+  background-color: $user-color;
+  padding: 5px 10px;
+  margin: 5px;
+  border-radius: 8px;
+  color: black;
+}
+
+.bot-msg {
+  text-align: left;
+  background-color: $orange-color;
+  padding: 5px 10px;
+  margin: 5px;
+  border-radius: 8px;
+  color: black;
+}
+
+.chat-historial-style {
+  height: 400px;
+  overflow-y: auto;
+  scroll-behavior: smooth;  // 👈 CSS nativo por si el scroll es manual
+  padding: 10px;
+  border: 1px solid #ccc;
+  background-color: #fafafa;
+}
+

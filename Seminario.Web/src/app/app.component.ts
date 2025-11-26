@@ -6,7 +6,8 @@ import { ChatComponent } from "./chat/chat/chat.component";
   selector: 'app-root',
   imports: [RouterOutlet, ChatComponent],
   templateUrl: './app.component.html',
-  styleUrl: './app.component.scss'
+  styleUrl: './app.component.scss',
+  standalone: true
 })
 export class AppComponent {
   title = 'Seminario.Web';

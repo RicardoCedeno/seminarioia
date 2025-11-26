@@ -95,13 +95,17 @@ namespace Seminario.Business.Repositories
             formatos.Add(clases[i]);
           }
         }
-
         // === 9️⃣ Extraer fechas ===
         ExtractDates extractDates = new();
         var (fechaInicio, fechaFin) = extractDates.ExtraerFechas(message);
 
-        // === 🔟 Generar respuesta ===
-        rta = new() { Formatos = formatos, FechaInicio = fechaInicio!.Value, FechaFin = fechaFin!.Value, Sistemas = [] };
+                // === 🔟 Generar respuesta ===
+                if (formatos.Count > 0 && fechaInicio != null && fechaInicio.HasValue && fechaFin != null && fechaFin.HasValue)
+                    rta = new() { Formatos = formatos, FechaInicio = fechaInicio!.Value, FechaFin = fechaFin!.Value, Sistemas = [] };
+
+                else if (formatos.Count == 0 && fechaInicio != null && fechaFin != null) return new() { Formatos = [], FechaInicio = fechaInicio, FechaFin = fechaFin, Sistemas = [] };
+
+                else if (formatos.Count == 0 && (fechaInicio == null || fechaFin == null)) return new() { Formatos = [], FechaInicio = null, FechaFin = null, Sistemas = [] };
       }
       catch (Exception ex)
       {

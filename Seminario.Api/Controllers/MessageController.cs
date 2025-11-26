@@ -20,7 +20,7 @@ namespace Seminario.Api.Controllers
       }
       catch (Exception ex)
       {
-        rta.Data = new() { SentMessage = ["Ocurrió un error al enviar el mensaje"], SentMessageDatetime = DateTime.Now };
+        rta.Data = new() { SentMessage = ["Ocurrió un error al enviar el mensaje"], SentMessageDatetime = DateTime.Now, FromUser= false };
       }
       return rta;
     }
