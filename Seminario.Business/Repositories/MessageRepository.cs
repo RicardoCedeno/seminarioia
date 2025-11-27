@@ -90,7 +90,7 @@ namespace Seminario.Business.Repositories
         List<string> formatos = new();
         for (int i = 0; i < probs.Length; i++)
         {
-          if (probs[i] > 0.90)
+          if (probs[i] > 0.85)
           {
             formatos.Add(clases[i]);
           }
@@ -99,13 +99,14 @@ namespace Seminario.Business.Repositories
         ExtractDates extractDates = new();
         var (fechaInicio, fechaFin) = extractDates.ExtraerFechas(message);
 
+        rta = new() { Formatos = formatos, FechaInicio = fechaInicio, FechaFin = fechaFin, Sistemas = [] };
                 // === 🔟 Generar respuesta ===
-                if (formatos.Count > 0 && fechaInicio != null && fechaInicio.HasValue && fechaFin != null && fechaFin.HasValue)
-                    rta = new() { Formatos = formatos, FechaInicio = fechaInicio!.Value, FechaFin = fechaFin!.Value, Sistemas = [] };
+                //if (formatos.Count > 0 && fechaInicio != null && fechaInicio.HasValue && fechaFin != null && fechaFin.HasValue)
+                //    rta = new() { Formatos = formatos, FechaInicio = fechaInicio!.Value, FechaFin = fechaFin!.Value, Sistemas = [] };
 
-                else if (formatos.Count == 0 && fechaInicio != null && fechaFin != null) return new() { Formatos = [], FechaInicio = fechaInicio, FechaFin = fechaFin, Sistemas = [] };
+                //else if (formatos.Count == 0 && fechaInicio != null && fechaFin != null) return new() { Formatos = [], FechaInicio = fechaInicio, FechaFin = fechaFin, Sistemas = [] };
 
-                else if (formatos.Count == 0 && (fechaInicio == null || fechaFin == null)) return new() { Formatos = [], FechaInicio = null, FechaFin = null, Sistemas = [] };
+                //else if (formatos.Count == 0 && (fechaInicio == null || fechaFin == null)) return new() { Formatos = [], FechaInicio = null, FechaFin = null, Sistemas = [] };
       }
       catch (Exception ex)
       {
