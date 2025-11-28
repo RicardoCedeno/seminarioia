@@ -7,8 +7,9 @@ using System.Threading.Tasks;
 
 namespace Seminario.Business.Contracts.Repositories
 {
-  public interface IMessageRepository
-  {
-    Task<ClasificacionDeterminadaDto> ClasificarMensaje(string message);
-  }
+    public interface IMessageRepository
+    {
+        Task<ClasificacionDeterminadaDto> ClasificarMensaje(string message);
+        Task<ClasificacionDeterminadaDto> ClasificarSentimiento(string message);
+    }
 }
