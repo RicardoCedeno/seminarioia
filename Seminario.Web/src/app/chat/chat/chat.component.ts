@@ -14,8 +14,18 @@ import { ChatService } from '../../services/chat.service';
 export class ChatComponent {
   @ViewChild('chatContainer') chatContainer!: ElementRef<HTMLDivElement>;
   chatService = inject(ChatService)
-  mensajes: { texto: string, fromUser: boolean }[] = [];
+  mensajes: { texto: string, fromUser: boolean }[] = [
+    { texto: '¡Hola! 👋 Soy tu asistente técnico.', fromUser: false },
+    { texto: '¿En qué puedo ayudarte hoy?', fromUser: false }
+  ];
   nuevoMensaje: string = '';
+  botEscribiendo = false;
+
+  ngAfterViewChecked() {
+    // this.scrollToBottom();
+  }
+
+
 
   enviarMensaje() {
     if (this.nuevoMensaje.trim() !== '') {

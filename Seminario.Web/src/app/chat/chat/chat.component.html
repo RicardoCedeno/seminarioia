@@ -1,4 +1,14 @@
 <div class="chat-container">
+  <!-- HEADER -->
+  <div class="chat-header">
+    <img src="https://ih1.redbubble.net/image.2875804696.2853/st,small,845x845-pad,1000x1000,f8f8f8.jpg" alt="Bot" />
+    <div class="bot-info">
+      <h3>Asistente Técnico</h3>
+      <span class="status">En línea</span>
+    </div>
+  </div>
+
+  <!-- HISTORIAL DE MENSAJES -->
   <div class="chat-window" #chatContainer>
     <div *ngFor="let msg of mensajes"
          [ngClass]="{ 'msg-user': msg.fromUser, 'msg-bot': !msg.fromUser }"
@@ -7,12 +17,19 @@
         {{ msg.texto }}
       </div>
     </div>
+
+    <!-- Indicador de que el bot está escribiendo -->
+    <div *ngIf="botEscribiendo" class="typing-indicator">
+      <span></span><span></span><span></span>
+    </div>
   </div>
 
+  <!-- ENTRADA DE MENSAJE -->
   <div class="chat-input">
-    <textarea (keydown.enter)="enviarMensaje(); $event.preventDefault()"
-          [(ngModel)]="nuevoMensaje"
-          placeholder="Escribe tu mensaje..."></textarea>
+    <textarea [(ngModel)]="nuevoMensaje"
+              placeholder="Escribe tu mensaje..."
+              rows="2"
+              (keydown.enter)="enviarMensaje(); $event.preventDefault()"></textarea>
     <button (click)="enviarMensaje()">
       <span>Enviar</span>
       <i class="fa fa-paper-plane"></i>
