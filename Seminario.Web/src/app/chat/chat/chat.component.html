@@ -1,14 +1,21 @@
-<div class="container">
-  <div class="chat-historial-style" #chatContainer>
-    <div *ngFor="let msg of mensajes" [ngClass]="{ 'user-msg': msg.fromUser, 'bot-msg': !msg.fromUser }">
-      {{ msg.texto }}
+<div class="chat-container">
+  <div class="chat-window" #chatContainer>
+    <div *ngFor="let msg of mensajes"
+         [ngClass]="{ 'msg-user': msg.fromUser, 'msg-bot': !msg.fromUser }"
+         class="message">
+      <div class="msg-bubble">
+        {{ msg.texto }}
+      </div>
     </div>
   </div>
 
-  <div class="user-style">
-    <span>Escribe tu mensaje</span>
-    <textarea [(ngModel)]="nuevoMensaje" cols="100" rows="3"></textarea>
+  <div class="chat-input">
+    <textarea (keydown.enter)="enviarMensaje(); $event.preventDefault()"
+          [(ngModel)]="nuevoMensaje"
+          placeholder="Escribe tu mensaje..."></textarea>
+    <button (click)="enviarMensaje()">
+      <span>Enviar</span>
+      <i class="fa fa-paper-plane"></i>
+    </button>
   </div>
-
-  <button (click)="enviarMensaje()">Enviar</button>
 </div>
