@@ -1,156 +1,179 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
+using Microsoft.Recognizers.Text;
+using Microsoft.Recognizers.Text.DateTime;
 
 namespace Seminario.Business.Helpers
 {
-  public class ExtractDates
-  {
-    private readonly Dictionary<string, int> mesesEsp;
-    private readonly List<string> patrones;
-    private readonly Regex patronCompleto;
-    public ExtractDates()
+    public class ExtractDates
     {
-      mesesEsp = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase)
+        private readonly string culture = Culture.Spanish;
+
+        public (DateTime? fechaInicio, DateTime? fechaFin) ExtraerFechas(string texto)
         {
-            { "enero", 1 }, { "febrero", 2 }, { "marzo", 3 }, { "abril", 4 },
-            { "mayo", 5 }, { "junio", 6 }, { "julio", 7 }, { "agosto", 8 },
-            { "septiembre", 9 }, { "octubre", 10 }, { "noviembre", 11 }, { "diciembre", 12 },
-            { "ene", 1 }, { "feb", 2 }, { "mar", 3 }, { "abr", 4 },
-            { "may", 5 }, { "jun", 6 }, { "jul", 7 }, { "ago", 8 },
-            { "sep", 9 }, { "oct", 10 }, { "nov", 11 }, { "dic", 12 }
-        };
+            if (string.IsNullOrWhiteSpace(texto))
+                return (null, null);
 
-      patrones = new List<string>
-        {
-            @"\d{1,2}\s+de\s+\w+\s+de\s+\d{4}",
-            @"\w+\s+de\s+\d{4}",
-            @"\d{1,2}[/-]\d{1,2}[/-]\d{4}",
-            @"\d{4}[/-]\d{1,2}[/-]\d{1,2}",
-            @"\d{1,2}\s+\w+\s+\d{4}",
-            @"\w+\s+\d{4}"
-        };
+            var textoLower = texto.ToLower();
 
-      string patronUnido = string.Join("|", patrones.Select(p => $"({p})"));
-      patronCompleto = new Regex(patronUnido, RegexOptions.IgnoreCase);
-    }
+            // Detectar indicadores de rango
+            bool tieneDesde = textoLower.Contains("desde") ||
+                             textoLower.Contains("a partir") ||
+                             textoLower.Contains("del");
+            bool tieneHasta = textoLower.Contains("hasta") ||
+                             textoLower.Contains("al");
+            bool esRango = textoLower.Contains("entre") ||
+                          (tieneDesde && tieneHasta);
 
-    public string LimpiarFechasDelTexto(string texto)
-    {
-      // Remover coincidencias de patrones de fechas
-      string textoLimpio = patronCompleto.Replace(texto, "");
+            // Usar Microsoft Recognizers para extraer fechas
+            var resultados = DateTimeRecognizer.RecognizeDateTime(texto, culture);
 
-      // Palabras temporales
-      var palabrasTemporales = new List<string>
-        {
-            "a partir de", "apartir", "desde", "hasta", "entre",
-            "inicio", "fin", "durante", "periodo", "rango", "del", "al"
-        }.OrderByDescending(p => p.Length);
+            var fechasExtraidas = new List<DateTime>();
+            bool rangoCompleto = false;
 
-      foreach (var palabra in palabrasTemporales)
-      {
-        textoLimpio = Regex.Replace(textoLimpio, $@"\b{Regex.Escape(palabra)}\b", "", RegexOptions.IgnoreCase);
-      }
+            foreach (var resultado in resultados)
+            {
+                if (resultado.Resolution == null) continue;
 
-      // Remover números sueltos
-      textoLimpio = Regex.Replace(textoLimpio, @"\b\d{1,4}\b", "");
+                foreach (var resolucion in resultado.Resolution.Values)
+                {
+                    if (resolucion is not List<Dictionary<string, string>> valores)
+                        continue;
 
-      // Espacios extra
-      textoLimpio = Regex.Replace(textoLimpio, @"\s+", " ").Trim();
+                    foreach (var valor in valores)
+                    {
+                        // Manejar rangos de fechas (start + end)
+                        if (valor.ContainsKey("start") && valor.ContainsKey("end"))
+                        {
+                            if (DateTime.TryParse(valor["start"], out DateTime inicio))
+                                fechasExtraidas.Add(inicio);
 
-      return textoLimpio;
-    }
+                            if (DateTime.TryParse(valor["end"], out DateTime fin))
+                                fechasExtraidas.Add(fin);
 
-    private int? NormalizarMes(string mesTexto)
-    {
-      if (mesesEsp.TryGetValue(mesTexto.ToLower(), out int mes))
-        return mes;
-      return null;
-    }
+                            rangoCompleto = true;
+                        }
+                        // Intentar extraer del timex si no hay end pero sí start
+                        else if (valor.ContainsKey("start") && !valor.ContainsKey("end") && valor.ContainsKey("timex"))
+                        {
+                            var timex = valor["timex"];
 
-    public (DateTime? fechaInicio, DateTime? fechaFin) ExtraerFechas(string texto)
-    {
-      var resultado = (fechaInicio: (DateTime?)null, fechaFin: (DateTime?)null);
-      var textoLower = texto.ToLower();
+                            // Formato: (YYYY-MM-DD,YYYY-MM-DD,PXXX)
+                            var match = System.Text.RegularExpressions.Regex.Match(
+                                timex,
+                                @"\((\d{4}-\d{2}-\d{2}),(\d{4}-\d{2}-\d{2})"
+                            );
 
-      bool tieneDesde = textoLower.Contains("desde") || textoLower.Contains("a partir") || textoLower.Contains("del");
-      bool tieneHasta = textoLower.Contains("hasta") || textoLower.Contains("al");
+                            if (match.Success)
+                            {
+                                if (DateTime.TryParse(match.Groups[1].Value, out DateTime inicio))
+                                    fechasExtraidas.Add(inicio);
 
-      var fechasEncontradas = new List<DateTime>();
+                                if (DateTime.TryParse(match.Groups[2].Value, out DateTime fin))
+                                    fechasExtraidas.Add(fin);
 
-      // Buscar patrones directos
-      foreach (var patron in patrones)
-      {
-        foreach (Match match in Regex.Matches(texto, patron, RegexOptions.IgnoreCase))
-        {
-          DateTime? fecha = ParsearMatch(match.Value);
-          if (fecha.HasValue)
-            fechasEncontradas.Add(fecha.Value);
-        }
-      }
+                                rangoCompleto = true;
+                            }
+                            else
+                            {
+                                // Si no se puede parsear timex, usar solo start
+                                if (DateTime.TryParse(valor["start"], out DateTime inicio))
+                                    fechasExtraidas.Add(inicio);
+                            }
+                        }
+                        // Manejar solo start sin timex de rango
+                        else if (valor.ContainsKey("start"))
+                        {
+                            if (DateTime.TryParse(valor["start"], out DateTime inicio))
+                                fechasExtraidas.Add(inicio);
+                        }
+                        // Manejar fechas individuales con "value"
+                        else if (valor.ContainsKey("value"))
+                        {
+                            if (DateTime.TryParse(valor["value"], out DateTime fecha))
+                                fechasExtraidas.Add(fecha);
+                        }
+                    }
+                }
+            }
 
-      // Ordenar y asignar según contexto
-      if (fechasEncontradas.Count >= 2)
-      {
-        var ordenadas = fechasEncontradas.OrderBy(f => f).ToList();
-        resultado.fechaInicio = ordenadas[(fechasEncontradas.Count / 2) - 1];
-        resultado.fechaFin = ordenadas.Last();
-      }
-      else if (fechasEncontradas.Count == 1)
-      {
-        if (tieneDesde && !tieneHasta)
-          resultado.fechaInicio = fechasEncontradas[0];
-        else if (tieneHasta && !tieneDesde)
-          resultado.fechaFin = fechasEncontradas[0];
-        else
-          resultado = (fechasEncontradas[0], fechasEncontradas[0]);
-      }
+            // Si no se encontraron fechas
+            if (fechasExtraidas.Count == 0)
+                return (null, null);
 
-      return resultado;
-    }
+            // Ordenar las fechas
+            var fechasOrdenadas = fechasExtraidas.OrderBy(f => f).Distinct().ToList();
 
-    private DateTime? ParsearMatch(string texto)
-    {
-      try
-      {
-        string[] partes = texto.Split(new[] { " ", "/", "-", "de" }, StringSplitOptions.RemoveEmptyEntries);
+            // Lógica de asignación según contexto
 
-        // Ejemplo: "12 de marzo de 2024"
-        if (texto.Contains("de") && partes.Length >= 3)
-        {
-          if (int.TryParse(partes[0], out int dia) &&
-              int.TryParse(partes[^1], out int año))
-          {
-            int? mes = NormalizarMes(partes[1]);
-            if (mes.HasValue)
-              return new DateTime(año, mes.Value, dia);
-          }
-        }
+            // Si encontramos un rango completo en el recognizer, usar primera y última
+            if (rangoCompleto || fechasOrdenadas.Count >= 2)
+            {
+                return (fechasOrdenadas.First(), fechasOrdenadas.Last());
+            }
+            // Si solo hay una fecha, usar contexto del texto
+            else if (fechasOrdenadas.Count == 1)
+            {
+                var fecha = fechasOrdenadas[0];
 
-        // Ejemplo: "marzo 2024"
-        if (partes.Length == 2 && !int.TryParse(partes[0], out _))
-        {
-          int? mes = NormalizarMes(partes[0]);
-          if (mes.HasValue && int.TryParse(partes[1], out int año))
-            return new DateTime(año, mes.Value, 1);
+                if (tieneDesde && !tieneHasta)
+                    return (fecha, null);
+                else if (tieneHasta && !tieneDesde)
+                    return (null, fecha);
+                else
+                    return (fecha, fecha);
+            }
+
+            return (null, null);
         }
 
-        // Ejemplo: "12/03/2024" o "2024-03-12"
-        if (Regex.IsMatch(texto, @"\d{1,2}[/-]\d{1,2}[/-]\d{4}") ||
-            Regex.IsMatch(texto, @"\d{4}[/-]\d{1,2}[/-]\d{1,2}"))
+        public string LimpiarFechasDelTexto(string texto)
         {
-          if (DateTime.TryParseExact(texto, new[] { "dd/MM/yyyy", "d/M/yyyy", "yyyy-MM-dd" },
-              CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime fecha))
-            return fecha;
-        }
-      }
-      catch { }
+            if (string.IsNullOrWhiteSpace(texto))
+                return texto;
 
-      return null;
+            var resultados = DateTimeRecognizer.RecognizeDateTime(texto, culture);
+
+            string textoLimpio = texto;
+
+            // Remover las fechas detectadas (en orden inverso para no afectar índices)
+            foreach (var resultado in resultados.OrderByDescending(r => r.Start))
+            {
+                int inicio = resultado.Start;
+                int longitud = resultado.End - resultado.Start + 1;
+
+                if (inicio >= 0 && inicio + longitud <= textoLimpio.Length)
+                {
+                    textoLimpio = textoLimpio.Remove(inicio, longitud);
+                }
+            }
+
+            // Remover palabras temporales comunes
+            var palabrasTemporales = new[]
+            {
+                "a partir de", "apartir", "desde", "hasta", "entre",
+                "inicio", "fin", "durante", "periodo", "rango", "del", "al"
+            };
+
+            foreach (var palabra in palabrasTemporales.OrderByDescending(p => p.Length))
+            {
+                textoLimpio = System.Text.RegularExpressions.Regex.Replace(
+                    textoLimpio,
+                    $@"\b{System.Text.RegularExpressions.Regex.Escape(palabra)}\b",
+                    "",
+                    System.Text.RegularExpressions.RegexOptions.IgnoreCase
+                );
+            }
+
+            // Normalizar espacios
+            textoLimpio = System.Text.RegularExpressions.Regex.Replace(
+                textoLimpio,
+                @"\s+",
+                " "
+            ).Trim();
+
+            return textoLimpio;
+        }
     }
-  }
 }

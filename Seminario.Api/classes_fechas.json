@@ -1,0 +1,10 @@
+[
+  "fechas_completas_dia_mes_año",
+  "fechas_con_palabras_temporales",
+  "fechas_formato_numerico",
+  "fechas_incompletas",
+  "fechas_mes_año",
+  "fechas_relativas_ambiguas",
+  "fechas_solo_año",
+  "sin_fechas"
+]
